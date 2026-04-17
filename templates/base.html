@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RepoScan{% endblock %}</title>
+    {% block meta %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <a href="{{ url_for('index') }}" class="brand">
+            <span class="brand-mark">&gt;_</span>
+            <span class="brand-name">RepoScan</span>
+            <span class="brand-tm">&trade;</span>
+        </a>
+        <nav class="site-nav">
+            <a href="{{ url_for('index') }}">Scan</a>
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="https://shieldstack.netlify.app" target="_blank" rel="noopener">ShieldStack&trade;</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <span class="badge">Free Forever</span>
+        <span>&middot; Pre-Install Security Scanner &middot;</span>
+        <a href="https://shieldstack.netlify.app" target="_blank" rel="noopener">Want deeper protection? ShieldStack&trade;</a>
+        <span class="dim">&middot; by CW Affiliate Investments LLC</span>
+    </footer>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

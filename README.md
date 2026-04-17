@@ -43,6 +43,42 @@ python C:\Tools\reposcan.py express
 
 ---
 
+## Web UI (Optional)
+
+Prefer a browser over the terminal? RepoScan™ ships with an optional local web UI. Scan logic is unchanged — the UI is a thin Flask wrapper that calls the same scan functions.
+
+**Install** (Flask is the only added dependency):
+
+```bash
+pip install -r requirements-ui.txt
+```
+
+**Launch:**
+
+```bash
+python reposcan.py --ui
+# then open http://127.0.0.1:5000
+```
+
+Customize host/port:
+
+```bash
+python reposcan.py --ui --ui-host 0.0.0.0 --ui-port 8080
+```
+
+**What you get:**
+
+- Form-based scan of any npm package or GitHub repo.
+- Risk score, verdict, and findings grouped by severity.
+- Scan history (last-N scans, searchable, sortable, CSV export).
+- Per-finding dismiss with reason — dismissals persist across rescans of the same target.
+- Shareable read-only view at `/share/<scan_id>` for passing results to teammates.
+- SQLite-backed (`scans.db` is created next to `reposcan.py` on first run — gitignored).
+
+**Fonts:** the UI uses a monospace stack and works without any bundled font files. If you want the designed JetBrains Mono look, drop the `.woff2` files into `static/fonts/` — see `static/fonts/README.md` for details. The CLI path is unaffected by the UI and does not require Flask.
+
+---
+
 ## What It Scans
 
 ### npm Packages

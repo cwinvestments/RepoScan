@@ -14,9 +14,11 @@ Want continuous monitoring, tarball inspection, alerts & a dashboard?
 → ShieldStack™: https://shieldstack.io
 """
 
+import argparse
 import json
 import re
 import sys
+import threading
 import difflib
 import urllib.request
 import urllib.error
@@ -156,6 +158,7 @@ SUSPICIOUS_NPM_FIELDS = [
 
 findings = []
 score = 0
+_scan_lock = threading.Lock()
 
 def log(level, msg, detail=""):
     icon = {"CRITICAL": f"{R}[CRITICAL]", "HIGH": f"{R}[HIGH]   ",
@@ -629,10 +632,47 @@ def print_verdict():
 # ══════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════
+def run_scan_capture(target: str) -> dict:
+    """Thread-safe scan wrapper. Both CLI and Flask call this.
+    Resets globals, runs scan, captures stdout, runs verdict, returns structured result."""
+    global score
+    import io, contextlib
+    buf = io.StringIO()
+    with _scan_lock:
+        findings.clear()
+        score = 0
+        with contextlib.redirect_stdout(buf):
+            if target.startswith("github:"):
+                scan_github_repo(target[7:])
+            else:
+                scan_npm(target)
+            print_verdict()
+        # snapshot under lock
+        result = {
+            "target": target,
+            "findings": list(findings),
+            "score": score,
+            "raw_output": buf.getvalue(),
+        }
+    return result
+
 def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("target", nargs="?")
+    parser.add_argument("--ui", action="store_true")
+    parser.add_argument("--ui-port", type=int, default=5000)
+    parser.add_argument("--ui-host", default="127.0.0.1")
+    parser.add_argument("-h", "--help", action="store_true")
+    args = parser.parse_args()
+
+    if args.ui:
+        from reposcan_ui import run_ui
+        run_ui(host=args.ui_host, port=args.ui_port)
+        return
+
     print(BANNER)
 
-    if len(sys.argv) < 2:
+    if args.help or not args.target:
         print(f"  {W}Usage:{RESET}")
         print(f"    python reposcan.py <npm-package>          # npm package")
         print(f"    python reposcan.py <npm-package@version>  # specific version")
@@ -643,7 +683,7 @@ def main():
         print(f"    python reposcan.py github:clinetools/cline\n")
         sys.exit(0)
 
-    target = sys.argv[1]
+    target = args.target
     print(f"  {DIM}Scan started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{RESET}")
 
     if target.startswith("github:"):

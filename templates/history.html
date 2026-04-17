@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Scan History &mdash; RepoScan{% endblock %}
+{% block content %}
+<section class="history-header">
+    <h1>Scan History</h1>
+    <form method="GET" action="{{ url_for('history') }}" class="history-filters">
+        <input
+            type="text"
+            name="q"
+            value="{{ q }}"
+            placeholder="Filter by target (e.g. lodash)"
+            autocomplete="off">
+        <select name="sort">
+            <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Most recent</option>
+            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest</option>
+            <option value="score" {% if sort == 'score' %}selected{% endif %}>Highest score</option>
+            <option value="target" {% if sort == 'target' %}selected{% endif %}>Target (A&ndash;Z)</option>
+        </select>
+        <button type="submit" class="btn">Apply</button>
+        <a class="btn" href="{{ url_for('history_csv') }}">Export CSV</a>
+    </form>
+</section>
+
+<section class="history-list">
+    {% if scans %}
+    <table class="scan-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>When</th>
+                <th>Target</th>
+                <th>Score</th>
+                <th>Verdict</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in scans %}
+            <tr>
+                <td class="dim">{{ r.id }}</td>
+                <td class="dim">{{ r.created_at }}</td>
+                <td><code>{{ r.target }}</code></td>
+                <td class="num">{{ r.score }}</td>
+                <td><span class="verdict verdict-{{ r.verdict_class }}">{{ r.verdict }}</span></td>
+                <td><a href="{{ url_for('results', scan_id=r.id) }}" class="btn-link">view &rarr;</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="dim">No scans match your filter.</p>
+    {% endif %}
+</section>
+{% endblock %}

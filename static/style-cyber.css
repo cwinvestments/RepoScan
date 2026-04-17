@@ -1,0 +1,28 @@
+/* RepoScan UI — Alternate "Cyber" theme (palette override).
+   Not linked from base.html by default. To use: add a second <link> in
+   base.html AFTER style.css so these :root values win:
+       <link rel="stylesheet" href="{{ url_for('static', filename='style-cyber.css') }}">
+   Layout, spacing, and component rules live in style.css — this file
+   only redefines the palette custom-properties. */
+:root {
+    --bg:           #0b0f14;
+    --bg-raised:    #111820;
+    --bg-surface:   #161f2a;
+    --border:       #25313f;
+    --text:         #e6edf3;
+    --text-dim:     #8b96a5;
+    --text-faint:   #5c6675;
+    --accent:       #6ee7ff;
+    --accent-ink:   #0b0f14;
+
+    --critical:     #ff5c7a;
+    --high:         #ff9b3d;
+    --medium:       #f0c557;
+    --low:          #c1d74a;
+    --info:         #5fb4ff;
+    --pass:         #5ed992;
+    --warning:      #ff9b3d;
+    --safe:         #5ed992;
+    --danger:       #ff5c7a;
+    --notice:       #f0c557;
+}

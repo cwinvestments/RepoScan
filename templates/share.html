@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Scan #{{ scan.id }} &mdash; {{ scan.target }} &mdash; RepoScan{% endblock %}
+{% block meta %}
+    <meta property="og:title" content="RepoScan #{{ scan.id }}: {{ scan.target }}">
+    <meta property="og:description" content="Verdict: {{ scan.verdict }} &middot; Risk score {{ scan.score }} &middot; Critical {{ scan.critical_count }}, High {{ scan.high_count }}, Medium {{ scan.medium_count }}">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="RepoScan: {{ scan.target }}">
+    <meta name="twitter:description" content="Verdict: {{ scan.verdict }} &middot; Score {{ scan.score }}">
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+{% block content %}
+<section class="results-header">
+    <div class="results-title">
+        <h1>Scan #{{ scan.id }} <span class="dim">(read-only)</span></h1>
+        <code class="results-target">{{ scan.target }}</code>
+        <p class="dim">Scanned {{ scan.created_at }}</p>
+    </div>
+</section>
+
+<section class="verdict-card verdict-card-{{ scan.verdict_class }}">
+    <div class="score">
+        <div class="score-label">Risk Score</div>
+        <div class="score-value">{{ scan.score }}</div>
+    </div>
+    <div class="verdict-text">
+        <div class="verdict verdict-{{ scan.verdict_class }}">{{ scan.verdict }}</div>
+        <div class="counts">
+            <span class="count count-critical">Critical: {{ scan.critical_count }}</span>
+            <span class="count count-high">High: {{ scan.high_count }}</span>
+            <span class="count count-medium">Medium: {{ scan.medium_count }}</span>
+            <span class="count count-low">Low: {{ scan.low_count }}</span>
+            <span class="count count-pass">Pass: {{ scan.pass_count }}</span>
+        </div>
+    </div>
+</section>
+
+<section class="findings">
+    <h2>Findings</h2>
+    {% for level in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "PASS"] %}
+        {% set group = groups.get(level, []) %}
+        {% if group %}
+        <details class="finding-group group-{{ level|lower }}" {% if level in ["CRITICAL","HIGH","MEDIUM"] %}open{% endif %}>
+            <summary>
+                <span class="level-tag level-{{ level|lower }}">{{ level }}</span>
+                <span class="count-inline">{{ group|length }}</span>
+            </summary>
+            <ul class="finding-list">
+                {% for f in group %}
+                <li class="finding-row {% if f.dismissed %}dismissed{% endif %}">
+                    <div class="finding-msg">{{ f.msg }}</div>
+                    {% if f.dismissed %}
+                    <div class="dismiss-note">Dismissed{% if f.dismiss_reason %} &mdash; {{ f.dismiss_reason }}{% endif %}</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+    {% endfor %}
+</section>
+
+<section class="raw-output">
+    <details>
+        <summary>Full scan output</summary>
+        <pre>{{ scan.full_output }}</pre>
+    </details>
+</section>
+{% endblock %}

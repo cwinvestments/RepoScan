@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}RepoScan &mdash; Pre-Install Security Scanner{% endblock %}
+{% block content %}
+<section class="banner-block">
+    <pre class="banner">{{ BANNER_PLAIN }}</pre>
+</section>
+
+<section class="scan-form">
+    <h1>Scan an npm package or GitHub repo</h1>
+    <form method="POST" action="{{ url_for('scan') }}" id="scan-form">
+        <label for="target" class="sr-only">Target</label>
+        <div class="input-row">
+            <input
+                type="text"
+                id="target"
+                name="target"
+                placeholder="lodash &middot; cline@2.3.0 &middot; github:owner/repo"
+                autocomplete="off"
+                autofocus
+                required>
+            <button type="submit" class="btn btn-primary" id="scan-btn">Scan</button>
+        </div>
+        <p class="hint">
+            Examples: <code>lodash</code>, <code>cline@2.3.0</code>, <code>github:facebook/react</code>
+        </p>
+        <div class="spinner" id="scan-spinner" hidden>Scanning&hellip; this may take 30&ndash;60s.</div>
+    </form>
+</section>
+
+<section class="recent">
+    <h2>Recent scans</h2>
+    {% if recent %}
+    <table class="scan-table">
+        <thead>
+            <tr>
+                <th>When</th>
+                <th>Target</th>
+                <th>Score</th>
+                <th>Verdict</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in recent %}
+            <tr>
+                <td class="dim">{{ r.created_at }}</td>
+                <td><code>{{ r.target }}</code></td>
+                <td class="num">{{ r.score }}</td>
+                <td><span class="verdict verdict-{{ r.verdict_class }}">{{ r.verdict }}</span></td>
+                <td><a href="{{ url_for('results', scan_id=r.id) }}" class="btn-link">view &rarr;</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p><a href="{{ url_for('history') }}" class="btn-link">See all &rarr;</a></p>
+    {% else %}
+    <p class="dim">No scans yet. Run your first one above.</p>
+    {% endif %}
+</section>
+{% endblock %}

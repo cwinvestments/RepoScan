@@ -1,0 +1,13 @@
+{# Partial: a single finding row. Used if templates want to include individually. #}
+<li class="finding-row {% if f.dismissed %}dismissed{% endif %}">
+    <div class="finding-msg">{{ f.msg }}</div>
+    {% if f.dismissed %}
+    <div class="dismiss-note">Dismissed{% if f.dismiss_reason %} &mdash; {{ f.dismiss_reason }}{% endif %}</div>
+    {% elif not readonly %}
+    <form method="POST" action="{{ url_for('dismiss', scan_id=scan.id) }}" class="dismiss-form">
+        <input type="hidden" name="finding_hash" value="{{ f.hash }}">
+        <input type="text" name="reason" placeholder="Reason (optional)" maxlength="200">
+        <button type="submit" class="btn-small">Dismiss</button>
+    </form>
+    {% endif %}
+</li>
