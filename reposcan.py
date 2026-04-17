@@ -657,6 +657,14 @@ def run_scan_capture(target: str) -> dict:
     return result
 
 def main():
+    # Windows default stdout encoding is cp1252, which cannot encode the Unicode
+    # box-drawing characters in BANNER. Reconfigure to UTF-8 so piped output works.
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("target", nargs="?")
     parser.add_argument("--ui", action="store_true")
