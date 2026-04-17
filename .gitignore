@@ -9,10 +9,12 @@ __pycache__/
 .gemini/
 
 # Regression test artifacts (transient, reviewable locally)
-regression_baseline/
-regression_after/
-regression_baseline_v2/
-regression_after_v2/
-regression_commit3/
+regression_*/
+
+# SQLite runtime files (UI creates scans.db from schema.sql on first run)
+scans.db
+scans.db-journal
+scans.db-wal
+scans.db-shm
 scans_smoketest.db
 scans_postfix_smoketest.db

@@ -54,36 +54,7 @@ def detect_rate_limit(raw_output: str) -> bool:
     return any(sig in raw_output for sig in RATE_LIMIT_SIGNALS)
 
 # ── DB ──
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS scans (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    target         TEXT    NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    score          INTEGER NOT NULL,
-    verdict        TEXT    NOT NULL,
-    verdict_class  TEXT    NOT NULL,
-    critical_count INTEGER NOT NULL DEFAULT 0,
-    high_count     INTEGER NOT NULL DEFAULT 0,
-    medium_count   INTEGER NOT NULL DEFAULT 0,
-    low_count      INTEGER NOT NULL DEFAULT 0,
-    info_count     INTEGER NOT NULL DEFAULT 0,
-    pass_count     INTEGER NOT NULL DEFAULT 0,
-    findings_json  TEXT    NOT NULL,
-    full_output    TEXT    NOT NULL,
-    rate_limit_hit INTEGER NOT NULL DEFAULT 0
-);
-CREATE TABLE IF NOT EXISTS dismissed_findings (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    target        TEXT    NOT NULL,
-    finding_hash  TEXT    NOT NULL,
-    reason        TEXT,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(target, finding_hash)
-);
-CREATE INDEX IF NOT EXISTS idx_scans_target  ON scans(target);
-CREATE INDEX IF NOT EXISTS idx_scans_created ON scans(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_dismissed_target ON dismissed_findings(target);
-"""
+SCHEMA_PATH = os.path.join(HERE, "schema.sql")
 
 def get_db():
     db = getattr(g, "_db", None)
@@ -94,8 +65,15 @@ def get_db():
     return db
 
 def init_db():
+    """Bootstrap scans.db from schema.sql if the DB does not already exist.
+    Existing DBs are not re-executed or migrated — edit schema.sql and remove
+    the file (or migrate by hand) to apply changes."""
+    if os.path.exists(DB_PATH):
+        return
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+        sql_text = f.read()
     con = sqlite3.connect(DB_PATH)
-    con.executescript(SCHEMA)
+    con.executescript(sql_text)
     con.commit()
     con.close()
 
