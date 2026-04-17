@@ -16,6 +16,7 @@ Want continuous monitoring, tarball inspection, alerts & a dashboard?
 
 import argparse
 import json
+import os
 import re
 import sys
 import threading
@@ -159,6 +160,7 @@ SUSPICIOUS_NPM_FIELDS = [
 findings = []
 score = 0
 _scan_lock = threading.Lock()
+_GITHUB_AUTH_LOGGED = False
 
 def log(level, msg, detail=""):
     icon = {"CRITICAL": f"{R}[CRITICAL]", "HIGH": f"{R}[HIGH]   ",
@@ -170,8 +172,21 @@ def log(level, msg, detail=""):
     findings.append((level, msg))
 
 def fetch_json(url):
+    global _GITHUB_AUTH_LOGGED
+    req_headers = {"User-Agent": "RepoScan/2.0"}
+    if "api.github.com" in url:
+        token = os.environ.get("GITHUB_TOKEN")
+        if token:
+            req_headers["Authorization"] = f"Bearer {token}"
+            if not _GITHUB_AUTH_LOGGED:
+                print(f"  {DIM}[INFO] Using authenticated GitHub API (5000 req/hr limit){RESET}")
+                _GITHUB_AUTH_LOGGED = True
+        else:
+            if not _GITHUB_AUTH_LOGGED:
+                print(f"  {Y}[WARN] No GITHUB_TOKEN set — GitHub API limited to 60 req/hr. Set env var for 5000 req/hr.{RESET}")
+                _GITHUB_AUTH_LOGGED = True
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "RepoScan-TM/2.0"})
+        req = urllib.request.Request(url, headers=req_headers)
         with urllib.request.urlopen(req, timeout=10) as r:
             return json.loads(r.read().decode())
     except Exception:
@@ -635,12 +650,13 @@ def print_verdict():
 def run_scan_capture(target: str) -> dict:
     """Thread-safe scan wrapper. Both CLI and Flask call this.
     Resets globals, runs scan, captures stdout, runs verdict, returns structured result."""
-    global score
+    global score, _GITHUB_AUTH_LOGGED
     import io, contextlib
     buf = io.StringIO()
     with _scan_lock:
         findings.clear()
         score = 0
+        _GITHUB_AUTH_LOGGED = False
         with contextlib.redirect_stdout(buf):
             if target.startswith("github:"):
                 scan_github_repo(target[7:])
