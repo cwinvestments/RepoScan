@@ -417,9 +417,13 @@ def scan_npm(package_name):
 def scan_github_issues(repo_slug):
     global score
     section(f"GitHub Issues — Prompt Injection Scan ({repo_slug})")
-    issues_data = fetch_json(f"https://api.github.com/repos/{repo_slug}/issues?state=open&per_page=30")
+    issues_url = f"https://api.github.com/repos/{repo_slug}/issues?state=all&per_page=100"
+    issues_data = fetch_json(issues_url)
+    if issues_data is None:
+        log("INFO", "Could not fetch GitHub issues (HTTP error — verify token scopes, network, or repo visibility)")
+        return
     if not issues_data:
-        log("INFO", "Could not fetch GitHub issues (API rate limit or private repo)")
+        log("PASS", "No issues to scan")
         return
 
     injection_found = False
@@ -454,7 +458,7 @@ def scan_github_issues(repo_slug):
             injection_found = True
 
     if not injection_found:
-        log("PASS", f"No prompt injection patterns in {len(issues_data)} open issue titles/bodies")
+        log("PASS", f"No prompt injection patterns in {len(issues_data)} recent issue/PR titles/bodies")
 
     # ── Scan PR titles (also read by AI bots) ──
     pr_data = fetch_json(f"https://api.github.com/repos/{repo_slug}/pulls?state=open&per_page=20")
